@@ -158,10 +158,12 @@ export const replaceList1: ReplaceInfo[] = [
 		{oper: "replace", line: "{ySubLine2}", str: [`pushbyte 8`]},
 		{oper: "find", out: "ySubLine3", cond: {type: "comm", comm: "pushbyte", param: `8`, idx: 1}, result: 0},
 		{oper: "replace", line: "{ySubLine3}", str: [`pushbyte 8`]},
-		{oper: "find", out: "ySubBoolLine1", cond: {type: "comm", comm: "subtract", idx: 1}, result: 0},
-		{oper: "replace", line: "{ySubBoolLine1} + 10", str: [`pushfalse`]},
-		{oper: "find", out: "ySubBoolLine2", cond: {type: "comm", comm: "subtract", idx: 2}, result: 0},
-		{oper: "replace", line: "{ySubBoolLine2} + 6", str: [`pushfalse`]},
+		{oper: "find", out: "ySubBoolLine1S", cond: {type: "comm", comm: "subtract", idx: 1}, result: 0},
+		{oper: "find", out: "ySubBoolLine1", cond: {type: "comm", comm: "pushtrue", idx: 1, after: "{ySubBoolLine1S}"}, result: 0},
+		{oper: "replace", line: "{ySubBoolLine1}", str: [`pushfalse`]},
+		{oper: "find", out: "ySubBoolLine2S", cond: {type: "comm", comm: "subtract", idx: 2}, result: 0},
+		{oper: "find", out: "ySubBoolLine2", cond: {type: "comm", comm: "pushtrue", idx: 1, after: "{ySubBoolLine2S}"}, result: 0},
+		{oper: "replace", line: "{ySubBoolLine2}", str: [`pushfalse`]},
 	]}},
 	//E5625gold改coin
 	{env: "all", search: {str: `_("Gold")`, addi: [{str: `_("Loan Sharking");`, type: "y"}], type: "method"}, result: [], pcode: {name: "researchE5625Progress.pcode", modify: [
@@ -346,6 +348,7 @@ export function genPcode(replace: ReplaceInfo, outPath: string) {
 		try {
 			if (modify.oper === "find") {
 				let result = 0;
+				let afterIdx = 0;
 				resultPcodesInfo.some((info) => {
 					if (modify.cond.type === "line") {
 						if (modify.cond.line === info.ascLine || modify.cond.line === info.descLine) {
@@ -353,15 +356,37 @@ export function genPcode(replace: ReplaceInfo, outPath: string) {
 							return true;
 						}
 					} else if (modify.cond.type === "comm") {
+						let after = 0;
+						if (modify.cond.after) {
+							let afterExpr = modify.cond.after.replace(/{(.+)}/g, (str, key) => {
+								if (variables[key] === undefined) {
+									throw new Error("no variables found: " + key);
+								}
+								return "" + variables[key];
+							});
+							after = eval(afterExpr);
+						}
+
+						if (info.ascLine < after) {
+							return false;
+						}
 						if (!modify.cond.param) {
-							if (modify.cond.comm === info.comm && (modify.cond.idx === info.commAscIdx || modify.cond.idx === info.commDescIdx)) {
-								result = info.ascLine;
-								return true;
+							if (modify.cond.comm === info.comm) {
+								afterIdx++;
+
+								if (modify.cond.idx === afterIdx || modify.cond.idx === info.commDescIdx) {
+									result = info.ascLine;
+									return true;
+								}
 							}
 						} else if (modify.cond.param) {
-							if (modify.cond.comm === info.comm && modify.cond.param === info.params.trim() && (modify.cond.idx === info.commParamAscIdx || modify.cond.idx === info.commParamDescIdx)) {
-								result = info.ascLine;
-								return true;
+							if (modify.cond.comm === info.comm && modify.cond.param === info.params.trim()) {
+								afterIdx++;
+								
+								if (modify.cond.idx === afterIdx || modify.cond.idx === info.commParamDescIdx) {
+									result = info.ascLine;
+									return true;
+								}
 							}
 						}
 					}
@@ -548,6 +573,9 @@ export async function startFindHardCode(env: "pc" | "phone", abcPath: string, sc
 			return "";
 		}
 
+		// if (replace.pcode.name === "initializeElement_buildings.pcode") {
+		// 	console.log(replace);
+		// }
 		genPcode(replace, pcodeFilePrefix);
 
 		// §]!6§.§>O§ ../resource/script/initializeElement_research.pcode 15629

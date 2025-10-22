@@ -52,6 +52,7 @@ export interface PcodeModifyFind {
 		comm: string;
 		idx: number;
 		param?: string;
+		after?: string;
 	};
 	out: string;
 
