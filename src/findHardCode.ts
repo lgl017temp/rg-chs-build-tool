@@ -175,10 +175,19 @@ export const replaceList1: ReplaceInfo[] = [
 		{oper: "find", out: "strLine", cond: {type: "comm", comm: "pushstring", param: `"."`, idx: 1}, result: 0},
 		{oper: "replace", line: "{strLine}", str: [`pushstring ""`]},
 	]}},
-	//导出模板
+	//导出模板编码
 	{env: "all", search: {str: `"iso-8859-1"`, addi: [], type: "method"}, result: [], pcode: {name: "exportTemplate.pcode", modify: [
 		{oper: "find", out: "strLine", cond: {type: "comm", comm: "pushstring", param: `"iso-8859-1"`, idx: 1}, result: 0},
 		{oper: "replace", line: "{strLine}", str: [`pushstring "utf-8"`]},
+	]}},
+	//红宝石确认
+	{env: "all", search: {str: `["Yes","No"]`, addi: [], type: "method"}, result: [], pcode: {name: "buyRubyBoundsConfirm.pcode", modify: [
+		{oper: "find", out: "yesLine", cond: {type: "comm", comm: "pushstring", param: `"Yes"`, idx: 2}, result: 0},
+		{oper: "insert", line: "{yesLine}", str: [`callproperty QName(PackageNamespace(""),"_"), 1`]},
+		{oper: "insert", line: "{yesLine} - 1", str: [`findpropstrict QName(PackageNamespace(""),"_")`]},
+		{oper: "find", out: "noLine", cond: {type: "comm", comm: "pushstring", param: `"No"`, idx: 2}, result: 0},
+		{oper: "insert", line: "{noLine}", str: [`callproperty QName(PackageNamespace(""),"_"), 1`]},
+		{oper: "insert", line: "{noLine} - 1", str: [`findpropstrict QName(PackageNamespace(""),"_")`]},
 	]}},
 ];
 
@@ -573,12 +582,10 @@ export async function startFindHardCode(env: "pc" | "phone", abcPath: string, sc
 			return "";
 		}
 
-		// if (replace.pcode.name === "initializeElement_buildings.pcode") {
+		// if (replace.pcode.name === "buyRubyBoundsConfirm.pcode") {
 		// 	console.log(replace);
 		// }
 		genPcode(replace, pcodeFilePrefix);
-
-		// §]!6§.§>O§ ../resource/script/initializeElement_research.pcode 15629
 
 		if (replace.result[0].class.includes(" ")) {
 			return `\\"${replace.result[0].class.replace(/:/g, ".").replace(/\"/g, "\\\\\\\"")}\\" ../${pcodeFilePrefix + "/" + replace.pcode.name} ${replace.result[0].methodBodyIdx}`;
