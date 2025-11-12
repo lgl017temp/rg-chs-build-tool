@@ -587,7 +587,7 @@ export async function startFindHardCode(env: "pc" | "phone", abcPath: string, sc
 		// }
 		genPcode(replace, pcodeFilePrefix);
 
-		if (replace.result[0].class.includes(" ")) {
+		if (replace.result[0].class.includes(" ") || replace.result[0].class.includes("&0")) {
 			return `\\"${replace.result[0].class.replace(/:/g, ".").replace(/\"/g, "\\\\\\\"")}\\" ../${pcodeFilePrefix + "/" + replace.pcode.name} ${replace.result[0].methodBodyIdx}`;
 		} else {
 			return `${replace.result[0].class.replace(/:/g, ".").replace(/\"/g, "\\\\\\\"")} ../${pcodeFilePrefix + "/" + replace.pcode.name} ${replace.result[0].methodBodyIdx}`;

@@ -13,6 +13,8 @@ call npm run modifyVersion
 
 call npm run modifyVersionUUID
 
+call npm run extractAssets
+
 mkdir .\out\assets\fonts
 copy .\resource\other\floating_bitmap.fnt .\out\assets\fonts
 mkdir .\out\assets\images
