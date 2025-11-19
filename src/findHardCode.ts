@@ -123,10 +123,10 @@ export const replaceList1: ReplaceInfo[] = [
 		{oper: "find", out: "strLine", cond: {type: "comm", comm: "pushstring", param: `"Mute"`, idx: 1}, result: 0},
 		{oper: "insert", line: "{strLine}", str: [`callproperty QName(PackageNamespace(""),"_"), 1`]},
 		{oper: "insert", line: "{strLine} - 1", str: [`findpropstrict QName(PackageNamespace(""),"_")`]},
-		{oper: "find", out: "heightLine1", cond: {type: "comm", comm: "pushshort", param: `580`, idx: 1}, result: 0},
-		{oper: "replace", line: "{heightLine1}", str: [`pushshort 610`]},
-		{oper: "find", out: "heightLine2", cond: {type: "comm", comm: "pushshort", param: `275`, idx: 1}, result: 0},
-		{oper: "replace", line: "{heightLine2}", str: [`pushshort 245`]},
+		// {oper: "find", out: "heightLine1", cond: {type: "comm", comm: "pushshort", param: `580`, idx: 1}, result: 0},
+		// {oper: "replace", line: "{heightLine1}", str: [`pushshort 610`]},
+		// {oper: "find", out: "heightLine2", cond: {type: "comm", comm: "pushshort", param: `275`, idx: 1}, result: 0},
+		// {oper: "replace", line: "{heightLine2}", str: [`pushshort 245`]},
 	]}},
 	//缩小字体(皇家交易) (buysmart)
 	{env: "phone", search: {str: `textRendererProperties.textAlign = "center"`, addi: [{str: `_("BUY 10000");`, type: "n"}, {str: `_("BUY 1000");`, type: "y"}, {str: `includeInLayout`, type: "y"}], type: "method"}, result: [], pcode: {name: "initializeElement_buyN_exchange.pcode", modify: [
