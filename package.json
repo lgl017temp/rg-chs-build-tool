@@ -20,7 +20,7 @@
     "modifyVersion": "cd ./jdk-17.0.2/bin && java -jar ../../ManifestEditor-2.0.jar ../../resource/AndroidManifest.xml -vc 4003006 -vn 4.3.6 -o ../../out/AndroidManifest_.xml --force",
     "modifyVersionUUID": "npx tsx src/changeVersionUUID.ts",
     "extractAssets": "unzip -o -d out .\\resource\\RealmGrinder_new.apk assets/images/*",
-    "repackApk": "copy /y .\\resource\\RealmGrinder_4.3.4_APKPure.apk .\\out\\android\\realmgrinder_repack.apk && cd ./out && ..\\zip -u ./android/realmgrinder_repack.apk ./assets/RealmGrinderMobile.swf ./assets/fonts/floating_bitmap.fnt ./assets/images/realmgrinderui_new.png ./assets/images/realmgrinderui2_new.png ./AndroidManifest.xml",
+    "repackApk": "copy /y .\\resource\\RealmGrinder_4.3.4_APKPure.apk .\\out\\android\\realmgrinder_repack.apk && cd ./out && ..\\zip -u ./android/realmgrinder_repack.apk ./assets/RealmGrinderMobile.swf ./assets/fonts/floating_bitmap.fnt ./assets/images/* ./AndroidManifest.xml",
     "alignApk": "cd ./Android/Sdk/build-tools/34.0.0 && zipalign -f -p 4 ../../../../out/android/realmgrinder_repack.apk ../../../../out/android/realmgrinder_aligned.apk",
     "signApk": "cd ./Android/Sdk/build-tools/34.0.0 && apksigner sign -verbose --ks ../../../../resource/realmgrinder.keystore --ks-key-alias realmgrinder --ks-pass pass:123456 --key-pass pass:123456 --out  ../../../../out/android/realmgrinder_signed.apk ../../../../out/android/realmgrinder_aligned.apk",
     "checkApk": "cd ./Android/Sdk/build-tools/34.0.0 && apksigner verify -v ../../../../out/android/realmgrinder_signed.apk",
