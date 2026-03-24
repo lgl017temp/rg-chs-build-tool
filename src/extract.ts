@@ -77,7 +77,7 @@ async function readTransExcel() {
 
 	let sheet = wb.getWorksheet(1);
 	if (sheet) {
-		for (let rowIdx = 2; rowIdx <= sheet.actualRowCount; rowIdx++) {
+		for (let rowIdx = 2; rowIdx <= sheet.lastRow!.number; rowIdx++) {
 			let row = sheet.getRow(rowIdx);
 			result.push({
 				file: "",
