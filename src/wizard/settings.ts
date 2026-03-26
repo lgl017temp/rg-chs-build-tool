@@ -7,7 +7,10 @@ export async function setSwfPCPath(options: RuntimeOptions) {
 	await setPath(options, "swfPCPath", {
 		message: "RealmGrinderDesktop.swf路径",
 		validate(val) {
-			if (!val || statSync(val).isDirectory() || !val.endsWith(".swf")) {
+			if (!val || !existsSync(val)) {
+				return "文件不存在";
+			}
+			if (statSync(val).isDirectory() || !val.endsWith(".swf")) {
 				return "不是.swf文件";
 			}
 		}
@@ -18,7 +21,10 @@ export async function setFFdecDir(options: RuntimeOptions) {
 		message: "ffdec目录",
 		directory: true,
 		validate(val) {
-			if (!val || !statSync(val).isDirectory() || !existsSync(resolve(val, "ffdec.exe"))) {
+			if (!val || !existsSync(val)) {
+				return "目录不存在";
+			}
+			if (!statSync(val).isDirectory() || !existsSync(resolve(val, "ffdec.exe"))) {
 				return "不是ffdec目录";
 			}
 		}
