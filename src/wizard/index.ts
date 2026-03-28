@@ -11,13 +11,26 @@ interface RuntimeParams {
 	taskLogs: ReturnType<typeof taskLog>;
 }
 
-type ReturnKey = "**return**";
+const ReturnKey = "**return**";
+const ResetKey = "**reset**";
 
 export type Options = newPCVersion.Options & handlePC.Options;
 export type RuntimeOptions = Options & RuntimeParams;
 
 export function gb2312Str(data: Buffer) {
 	return iconv.decode(data, 'gb2312');
+}
+
+export function getDefaultOption() {
+	let options: Options = {
+		swfPCPath: resolvePath("resource/RealmGrinderDesktop.swf"),
+
+		ffdecDir: resolvePath("FFdec2"),
+
+		outDir: resolvePath("out"),
+		distDir: resolvePath("dist"),
+	};
+	return options;
 }
 
 async function main() {
@@ -28,14 +41,7 @@ async function main() {
 		limit: 5,
 	});
 
-	let options: Options = {
-		swfPCPath: resolvePath("resource/RealmGrinderDesktop.swf"),
-
-		ffdecDir: resolvePath("FFdec2"),
-
-		outDir: resolvePath("out"),
-		distDir: resolvePath("dist"),
-	};
+	let options = getDefaultOption();
 
 	const configFile = "config.json";
 	try {
@@ -83,7 +89,7 @@ async function main() {
 			}
 		}
 	} finally {
-		writeConfig(finalOptions, options, configFile);
+		writeConfig(finalOptions, configFile);
 	}
 }
 
@@ -94,12 +100,12 @@ async function menu(options: RuntimeOptions) {
 			{ value: 'startFast', label: '快速执行', hint: '使用配置的信息执行，仅询问关键步骤和信息'},
 			{ value: 'start', label: '执行', hint: '每一步都询问'},
 			{ value: 'settings', label: '修改配置', hint: '文件路径等, 也可以执行时修改'},
-			{ value: '**return**', label: '退出'},
+			{ value: ReturnKey, label: '退出'},
 		],
 		maxItems: 10,
 	});
 
-	if (key === "**return**" || isCancel(key)) {
+	if (key === ReturnKey || isCancel(key)) {
 		return false;
 	} else if (key === "settings") {
 		while (true) {
@@ -126,20 +132,27 @@ async function start(options: RuntimeOptions) {
 }
 
 async function settings(options: RuntimeOptions) {
-	const key = await select<keyof Options | ReturnKey>({
+	const key = await select<keyof Options | typeof ReturnKey | typeof ResetKey>({
 		message: '选择一个配置',
 		options: [
-			{ value: '**return**', label: '返回'},
-			{ value: 'swfPCPath', label: 'swfPCPath', hint: 'PC端steam的swf文件路径(RealmGrinderDesktop.swf)'},
-			{ value: 'ffdecDir', label: 'ffdecDir', hint: 'ffdec路径'},
-			{ value: 'outDir', label: 'outDir', hint: '中间文件输出路径'},
-			{ value: 'distDir', label: 'distDir', hint: '打包结果输出路径'},
+			{ value: ReturnKey, label: '返回'},
+			{ value: 'swfPCPath', label: 'pc端swf路径', hint: options.swfPCPath},
+			{ value: 'ffdecDir', label: 'ffdec路径', hint: options.ffdecDir},
+			{ value: 'outDir', label: 'outDir', hint: options.outDir},
+			{ value: 'distDir', label: 'distDir', hint: options.distDir},
+			{ value: ResetKey, label: '重置'},
 		],
 		maxItems: 10,
 	});
 
-	if (key === "**return**" || isCancel(key)) {
+	if (key === ReturnKey || isCancel(key)) {
 		return false;
+	} else if (key === ResetKey) {
+		options = {
+			...options,
+
+			...getDefaultOption(),
+		}
 	} else if (key === "swfPCPath") {
 		await setSwfPCPath(options);
 	} else if (key === "ffdecDir") {
@@ -153,9 +166,9 @@ async function settings(options: RuntimeOptions) {
 	}
 }
 
-async function writeConfig(options: RuntimeOptions, fakeOptions: Options, configFile: string) {
+async function writeConfig(options: RuntimeOptions, configFile: string) {
 	try {
-		let json = fakeOptions;
+		let json = getDefaultOption();
 		(Object.keys(json) as (keyof Options)[]).forEach(key => {
 			json[key] = options[key];
 		})

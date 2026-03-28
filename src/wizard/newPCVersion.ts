@@ -33,45 +33,43 @@ export async function main(options: RuntimeOptions) {
 	}
 
 	//TODO 取消时终止执行
-	try {
-		await tasks([
-			{
-				title: '删除旧文件',
-				task: async (message) => {
-					await deleteOldFile(options);
-					return '删除旧文件完成';
-				},
-			},
-			{
-				title: '生成反编译代码',
-				task: async (message) => {
-					await exportScript(options, message);
-					return '生成反编译代码完成';
-				},
-			},
-			{
-				title: '生成反编译PCode',
-				task: async (message) => {
-					await exportPcode(options, message);
-					return '生成反编译PCode完成';
-				},
-			},
-			{
-				title: '生成方法声明索引',
-				task: async (message) => {
-					await exportABC(options, message);
-					return '生成方法声明索引完成';
-				},
-			},
-		]);
-	} finally {
-		if (currLs) {
-			currLs.kill("SIGKILL");
+	process.on('exit', () => {
+		currLs?.kill("SIGTERM");
+	});
 
-			currLs = undefined;
-		}
-	}
+	await tasks([
+		{
+			title: '删除旧文件',
+			task: async (message) => {
+				await deleteOldFile(options);
+				return '删除旧文件完成';
+			},
+		},
+		{
+			title: '生成反编译代码',
+			task: async (message) => {
+				await exportScript(options, message);
+				return '生成反编译代码完成';
+			},
+		},
+		{
+			title: '生成反编译PCode',
+			task: async (message) => {
+				await exportPcode(options, message);
+				return '生成反编译PCode完成';
+			},
+		},
+		{
+			title: '生成方法声明索引',
+			task: async (message) => {
+				await exportABC(options, message);
+				return '生成方法声明索引完成';
+			},
+		},
+	]);
 
+	// await deleteOldFile(options);
+	// await exportScript(options, () => {});
 }
 
 async function deleteOldFile(options: RuntimeOptions) {
@@ -134,14 +132,14 @@ async function exportScript(options: RuntimeOptions, message: (string: string) =
 				options.taskLogs.error(gb2312Str(data));
 
 				// console.error(`stderr: ${data}`);
-				currLs?.kill("SIGKILL");
+				currLs?.kill("SIGTERM");
 			});
 			currLs.on('close', (code, signal) => {
 				// console.error(`child process exited with signal ${signal}`);
 
 				currLs = undefined;
 
-				if (signal === "SIGKILL") {
+				if (signal === "SIGTERM") {
 					reject();
 				} else {
 					resolve();
@@ -186,14 +184,14 @@ async function exportPcode(options: RuntimeOptions, message: (string: string) =>
 				options.taskLogs.error(gb2312Str(data));
 
 				// console.error(`stderr: ${data}`);
-				currLs?.kill("SIGKILL");
+				currLs?.kill("SIGTERM");
 			});
 			currLs.on('close', (code, signal) => {
 				// console.error(`child process exited with signal ${signal}`);
 
 				currLs = undefined;
 
-				if (signal === "SIGKILL") {
+				if (signal === "SIGTERM") {
 					reject();
 				} else {
 					resolve();
@@ -236,14 +234,14 @@ async function exportABC(options: RuntimeOptions, message: (string: string) => v
 				options.taskLogs.error(gb2312Str(data));
 
 				// console.error(`stderr: ${data}`);
-				currLs?.kill("SIGKILL");
+				currLs?.kill("SIGTERM");
 			});
 			currLs.on('close', (code, signal) => {
 				// console.error(`child process exited with signal ${signal}`);
 
 				currLs = undefined;
 
-				if (signal === "SIGKILL") {
+				if (signal === "SIGTERM") {
 					reject();
 				} else {
 					resolve();

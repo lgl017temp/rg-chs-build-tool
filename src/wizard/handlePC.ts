@@ -22,7 +22,7 @@ export async function main(options: RuntimeOptions) {
 		{
 			title: '删除旧文件',
 			task: async () => {
-				await deleteOldFile(options);
+				// await deleteOldFile(options);
 				return '删除旧文件完成';
 			},
 		},
