@@ -37,8 +37,8 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "@clack/core": "file:../clack/packages/core",
-    "@clack/prompts": "file:../clack/packages/prompts",
+    "@clack/core": "file:./clack/packages/core",
+    "@clack/prompts": "file:./clack/packages/prompts",
     "exceljs": "^4.4.0",
     "iconv-lite": "^0.7.2"
   }

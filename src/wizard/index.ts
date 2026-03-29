@@ -3,7 +3,7 @@ import * as newPCVersion from "./newPCVersion";
 import * as handlePC from "./handlePC";
 import { resolve as resolvePath } from "node:path";
 import iconv from "iconv-lite";
-import { setDistDir, setFFdecDir, setOutDir, setSwfPCPath } from "./settings";
+import { setDistDir, setFFdecDir, setJavaDir, setOutDir, setSwfPCPath } from "./settings";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
 interface RuntimeParams {
@@ -23,9 +23,10 @@ export function gb2312Str(data: Buffer) {
 
 export function getDefaultOption() {
 	let options: Options = {
-		swfPCPath: resolvePath("resource/RealmGrinderDesktop.swf"),
-
+		javaDir: resolvePath("jdk-17.0.2"),
 		ffdecDir: resolvePath("FFdec2"),
+		
+		swfPCPath: resolvePath("resource/RealmGrinderDesktop.swf"),
 
 		outDir: resolvePath("out"),
 		distDir: resolvePath("dist"),
@@ -72,6 +73,7 @@ async function main() {
 	const finalOptions: RuntimeOptions = {
 		swfPCPath: resolvePath(options.swfPCPath),
 
+		javaDir: resolvePath(options.javaDir),
 		ffdecDir: resolvePath(options.ffdecDir),
 		
 		outDir: resolvePath(options.outDir),
@@ -153,10 +155,12 @@ async function settings(options: RuntimeOptions) {
 
 			...getDefaultOption(),
 		}
-	} else if (key === "swfPCPath") {
-		await setSwfPCPath(options);
+	} else if (key === "javaDir") {
+		await setJavaDir(options);
 	} else if (key === "ffdecDir") {
 		await setFFdecDir(options);
+	} else if (key === "swfPCPath") {
+		await setSwfPCPath(options);
 	} else if (key === "outDir") {
 		await setOutDir(options);
 	} else if (key === "distDir") {

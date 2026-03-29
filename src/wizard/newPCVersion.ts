@@ -7,10 +7,12 @@ import { join, resolve } from "node:path";
 import { setOutDir, setSwfPCPath, validOutDir, validSwfPCPath } from "./settings";
 
 export interface Options {
-	outDir: string,
+	javaDir: string,
 	ffdecDir: string,
-
+	
 	swfPCPath: string,
+	
+	outDir: string,
 }
 
 let currLs: ChildProcessWithoutNullStreams | undefined;
@@ -32,7 +34,6 @@ export async function main(options: RuntimeOptions) {
 		await setSwfPCPath(options);
 	}
 
-	//TODO 取消时终止执行
 	process.on('exit', () => {
 		currLs?.kill("SIGTERM");
 	});
@@ -81,18 +82,21 @@ async function deleteOldFile(options: RuntimeOptions) {
 	}
 }
 async function exportScript(options: RuntimeOptions, message: (string: string) => void) {
-	//TODO ffdec.bat中内联了java
 	//cd ./FFdec2 && ffdec.bat -config autoDeobfuscate=1 -timeout 120 -exportfiletimeout 600 -export script ../out/ ../resource/RealmGrinderDesktop.swf
+	//java %MEMORY_PARAM% %STACK_SIZE_PARAM% -Djava.net.preferIPv4Stack=true -Djna.nosys=true -Djava.util.Arrays.useLegacyMergeSort=true -jar "%~dp0\ffdec.jar" %*
 
-	//TODO 取消时终止执行
 	return new Promise<void>(async (resolve, reject) => {
 		try {
 			const outDir = join(options.outDir);
 			mkdirSync(outDir, {recursive: true});
 
-			currLs = spawn(`cmd`, [
-				"/c",
-				"ffdec.bat",
+			currLs = spawn(join(options.javaDir, "bin", "java.exe"), [
+				"-Xmx2048m",
+				"-Djava.net.preferIPv4Stack=true",
+				"-Djna.nosys=true",
+				"-Djava.util.Arrays.useLegacyMergeSort=true",
+				"-jar",
+				"ffdec.jar",
 				"-config",
 				"autoDeobfuscate=1",
 				"-timeout", "120",
@@ -152,18 +156,20 @@ async function exportScript(options: RuntimeOptions, message: (string: string) =
 	});
 }
 async function exportPcode(options: RuntimeOptions, message: (string: string) => void) {
-	//TODO ffdec.bat中内联了java
 	//cd ./FFdec2 && ffdec.bat -config autoDeobfuscate=1 -timeout 120 -exportfiletimeout 600 -format script:pcode -export script ../out/ ../resource/RealmGrinderDesktop.swf
 	
-	//TODO 取消时终止执行
 	return new Promise<void>(async (resolve, reject) => {
 		try {
 			const outDir = join(options.outDir);
 			mkdirSync(outDir, {recursive: true});
 
-			currLs = spawn(`cmd`, [
-				"/c",
-				"ffdec.bat",
+			currLs = spawn(join(options.javaDir, "bin", "java.exe"), [
+				"-Xmx2048m",
+				"-Djava.net.preferIPv4Stack=true",
+				"-Djna.nosys=true",
+				"-Djava.util.Arrays.useLegacyMergeSort=true",
+				"-jar",
+				"ffdec.jar",
 				"-config",
 				"autoDeobfuscate=1",
 				"-timeout", "120",
@@ -204,8 +210,6 @@ async function exportPcode(options: RuntimeOptions, message: (string: string) =>
 	});
 }
 async function exportABC(options: RuntimeOptions, message: (string: string) => void) {
-	//TODO ffdec.bat中内联了java
-	//cd ./FFdec2 && ffdec.bat -config autoDeobfuscate=1 -timeout 120 -exportfiletimeout 600 -format script:pcode -export script ../out/ ../resource/RealmGrinderDesktop.swf
 	//cd ./FFdec2 && ffdec.bat -dumpabc ../resource/RealmGrinderDesktop.swf ../out/abc > ../out/abc.dmp Translation
 	return new Promise<void>(async (resolve, reject) => {
 		try {
@@ -213,9 +217,13 @@ async function exportABC(options: RuntimeOptions, message: (string: string) => v
 			const outFile = join(options.outDir, "abc.dmp");
 			mkdirSync(outDir, {recursive: true});
 
-			currLs = spawn(`cmd`, [
-				"/c",
-				"ffdec.bat",
+			currLs = spawn(join(options.javaDir, "bin", "java.exe"), [
+				"-Xmx2048m",
+				"-Djava.net.preferIPv4Stack=true",
+				"-Djna.nosys=true",
+				"-Djava.util.Arrays.useLegacyMergeSort=true",
+				"-jar",
+				"ffdec.jar",
 				"-dumpabc",
 				`${options.swfPCPath}`,
 				`${outDir}`,

@@ -18,6 +18,22 @@ export function validSwfPCPath(val?: string) {
 	}
 }
 
+export async function setJavaDir(options: RuntimeOptions) {
+	await setPath(options, "javaDir", {
+		message: "jdk目录",
+		directory: true,
+		validate: validJavaDir,
+	});
+}
+export function validJavaDir(val?: string) {
+	if (!val || !existsSync(val)) {
+		return "目录不存在";
+	}
+	if (!statSync(val).isDirectory() || !existsSync(resolve(val, "bin", "java.exe"))) {
+		return "不是jdk目录";
+	}
+}
+
 export async function setFFdecDir(options: RuntimeOptions) {
 	await setPath(options, "ffdecDir", {
 		message: "ffdec目录",

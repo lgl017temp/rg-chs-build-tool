@@ -2,6 +2,9 @@
 node_modules/
 /out/
 .vscode/
+*.lock
+
+clack
 
 /node-v24.8.0-win-x64/
 /jdk-17.0.2/
@@ -13,6 +16,7 @@ node_modules/
 
 runWizard.exe
 config.json
+*.log
 
 /resource/RealmGrinderDesktop4.3.5.swf
 /resource/com.kongregate.mobile.realmgrinder.google_4.3.12-4003012_minAPI9(armeabi-v7a)(nodpi)_apkmirror.com.apk
