@@ -1,31 +1,59 @@
 // rmdir /s /q .\out\scripts
 
-import { confirm, path, progress, spinner, taskLog, tasks } from "@clack/prompts";
+import { box, confirm, path, progress, spinner, taskLog, tasks } from "@clack/prompts";
 import { exec } from "node:child_process";
 import { rm } from "node:fs";
 import { RuntimeOptions } from ".";
+import { startFindHardCode } from "../findHardCode";
+import { join } from "node:path";
+import { setOutDir, validOutDir } from "./settings";
+
+export interface RuntimeParams {
+	patchPCParam: string;
+}
 
 export interface Options {
 	distDir: string,
 }
 
 export async function main(options: RuntimeOptions) {
-	const needRun0PC = await confirm({
-		message: "执行PC端更新?",
-	});
+	if (!options.fast) {
+		const needRun1PC = await confirm({
+			message: "执行PC端?",
+		});
+		
+		if (!needRun1PC) {
+			return;
+		}
+	}
+	
+	box("生成PC端修补代码");
 
-	if (!needRun0PC) {
-		return;
+	if (!options.fast || validOutDir(options.outDir)) {
+		await setOutDir(options);
 	}
 
 	await tasks([
 		{
-			title: '删除旧文件',
-			task: async () => {
-				// await deleteOldFile(options);
-				return '删除旧文件完成';
+			title: '生成修补代码',
+			task: async (message) => {
+				await patchPC(options);
+				return '生成修补代码完成';
 			},
 		},
 	]);
+}
+
+async function patchPC(options: RuntimeOptions) {
+	try {
+		let result = await startFindHardCode("pc", join(options.outDir, "abc.dmp"), join(options.outDir, "scripts"), join(options.outDir, "pcode"));
+	
+		options.taskLogs.success("参数：" + result);
+	
+		options.patchPCParam = result;
+	} catch (error) {
+		options.taskLogs.error("" + error);
+		throw error;
+	}
 }
 

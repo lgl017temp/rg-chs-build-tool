@@ -39,7 +39,9 @@
   "dependencies": {
     "@clack/core": "file:./clack/packages/core",
     "@clack/prompts": "file:./clack/packages/prompts",
+    "app-info-parser": "^1.1.6",
     "exceljs": "^4.4.0",
-    "iconv-lite": "^0.7.2"
+    "iconv-lite": "^0.7.2",
+    "jszip": "^3.10.1"
   }
 }

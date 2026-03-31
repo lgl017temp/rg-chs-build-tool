@@ -1,12 +1,13 @@
 import { text, password, autocomplete, path, select, confirm, groupMultiselect, group, tasks, isCancel, progress, intro, outro, cancel, spinner, note, box, taskLog, stream, log, updateSettings, PathOptions } from '@clack/prompts';
 import * as newPCVersion from "./newPCVersion";
+import * as newPhoneVersion from "./newPhoneVersion";
 import * as handlePC from "./handlePC";
 import { resolve as resolvePath } from "node:path";
 import iconv from "iconv-lite";
-import { setDistDir, setFFdecDir, setJavaDir, setOutDir, setSwfPCPath } from "./settings";
+import { setDistDir, setFFdecDir, setJavaDir, setNewApkPath, setOutDir, setSwfPCPath } from "./settings";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
-interface RuntimeParams {
+export interface RuntimeParams {
 	fast: boolean;
 	taskLogs: ReturnType<typeof taskLog>;
 }
@@ -14,8 +15,8 @@ interface RuntimeParams {
 const ReturnKey = "**return**";
 const ResetKey = "**reset**";
 
-export type Options = newPCVersion.Options & handlePC.Options;
-export type RuntimeOptions = Options & RuntimeParams;
+export type Options = newPCVersion.Options & newPhoneVersion.Options & handlePC.Options;
+export type RuntimeOptions = Options & RuntimeParams & newPCVersion.RuntimeParams & newPhoneVersion.RuntimeParams & handlePC.RuntimeParams;
 
 export function gb2312Str(data: Buffer) {
 	return iconv.decode(data, 'gb2312');
@@ -27,6 +28,7 @@ export function getDefaultOption() {
 		ffdecDir: resolvePath("FFdec2"),
 		
 		swfPCPath: resolvePath("resource/RealmGrinderDesktop.swf"),
+		newApkPath: resolvePath("resource/RealmGrinder_new.apk"),
 
 		outDir: resolvePath("out"),
 		distDir: resolvePath("dist"),
@@ -71,10 +73,11 @@ async function main() {
 	}
 
 	const finalOptions: RuntimeOptions = {
-		swfPCPath: resolvePath(options.swfPCPath),
-
 		javaDir: resolvePath(options.javaDir),
 		ffdecDir: resolvePath(options.ffdecDir),
+		
+		swfPCPath: resolvePath(options.swfPCPath),
+		newApkPath: resolvePath(options.newApkPath),
 		
 		outDir: resolvePath(options.outDir),
 		distDir: resolvePath(options.distDir),
@@ -82,6 +85,11 @@ async function main() {
 		taskLogs,
 
 		fast: false,
+
+		swfPhonePath: "",
+		newApkVersionName: "",
+		newApkVersionCode: -1,
+		patchPCParam: "",
 	};
 
 	try {
@@ -99,7 +107,7 @@ async function menu(options: RuntimeOptions) {
 	const key = await select({
 		message: '功能菜单',
 		options: [
-			{ value: 'startFast', label: '快速执行', hint: '使用配置的信息执行，仅询问关键步骤和信息'},
+			{ value: 'startFast', label: '快速执行', hint: '使用配置的信息执行, 仅询问关键步骤和信息'},
 			{ value: 'start', label: '执行', hint: '每一步都询问'},
 			{ value: 'settings', label: '修改配置', hint: '文件路径等, 也可以执行时修改'},
 			{ value: ReturnKey, label: '退出'},
@@ -128,9 +136,11 @@ async function menu(options: RuntimeOptions) {
 
 async function start(options: RuntimeOptions) {
 	await newPCVersion.main(options);
+	// await newPhoneVersion.main(options);
+	await handlePC.main(options);
+	// await handlePhone.main(options);
 
-	outro("处理完成");
-	// note(`最终生成结果在${options.distDir}中`);
+	// box(`处理完成, 最终生成结果在${options.distDir}中`);
 }
 
 async function settings(options: RuntimeOptions) {
@@ -138,10 +148,12 @@ async function settings(options: RuntimeOptions) {
 		message: '选择一个配置',
 		options: [
 			{ value: ReturnKey, label: '返回'},
+			{ value: 'javaDir', label: 'jdk目录', hint: options.javaDir},
+			{ value: 'ffdecDir', label: 'ffdec目录', hint: options.ffdecDir},
 			{ value: 'swfPCPath', label: 'pc端swf路径', hint: options.swfPCPath},
-			{ value: 'ffdecDir', label: 'ffdec路径', hint: options.ffdecDir},
-			{ value: 'outDir', label: 'outDir', hint: options.outDir},
-			{ value: 'distDir', label: 'distDir', hint: options.distDir},
+			{ value: 'newApkPath', label: '最新apk路径', hint: options.newApkPath},
+			{ value: 'outDir', label: '中间文件输出目录', hint: options.outDir},
+			{ value: 'distDir', label: '打包结果输出目录', hint: options.distDir},
 			{ value: ResetKey, label: '重置'},
 		],
 		maxItems: 10,
@@ -161,6 +173,8 @@ async function settings(options: RuntimeOptions) {
 		await setFFdecDir(options);
 	} else if (key === "swfPCPath") {
 		await setSwfPCPath(options);
+	} else if (key === "newApkPath") {
+		await setNewApkPath(options);
 	} else if (key === "outDir") {
 		await setOutDir(options);
 	} else if (key === "distDir") {

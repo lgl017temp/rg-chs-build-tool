@@ -9,7 +9,7 @@ const scriptPath = "out/phone/scripts";
 const abcPath = "out/abcPhone.dmp"
 
 async function main() {
-	let result = await startFindHardCode("phone", abcPath, scriptPath, pcodeFilePrefix, paramPrefix);
+	let result = await startFindHardCode("phone", abcPath, scriptPath, pcodeFilePrefix);
 
 	// console.log("用下面的输出替换package.json中replaceTransMobile的内容")
 	// console.log("==============================================")

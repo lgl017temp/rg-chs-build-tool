@@ -10,7 +10,7 @@ const scriptPath = "out/scripts";
 const abcPath = "out/abc.dmp"
 
 async function main() {
-	let result = await startFindHardCode("pc", abcPath, scriptPath, pcodeFilePrefix, paramPrefix);
+	let result = await startFindHardCode("pc", abcPath, scriptPath, pcodeFilePrefix);
 
 	// console.log("用下面的输出替换package.json中replaceTrans的内容")
 	// console.log("==============================================")

@@ -12,7 +12,7 @@ export const replaceList1: ReplaceInfo[] = [
 		{oper: "insert", line: "{endLine} - 1", str: [`callproperty QName(PackageNamespace(""),"_"), 1`]},
 		{oper: "insert", line: "{startDelLine}", str: [`findpropstrict QName(PackageNamespace(""),"_")`]},
 	]}},
-	//buy all升级去空格，放大字号
+	//buy all升级去空格, 放大字号
 	{env: "all", search: {str: `_("BUY ALL");`, addi: [{str: `Upgrade`, type: "y"}], type: "method"}, result: [], pcode: {name: "initializeElement_upgrade.pcode", modify: [
 		{oper: "find", out: "fontSizeLine1", cond: {type: "comm", comm: "pushbyte", param: "26", idx: 1}, result: 0},
 		{oper: "replace", line: "{fontSizeLine1}", str: [`pushbyte 30`]},
@@ -25,7 +25,7 @@ export const replaceList1: ReplaceInfo[] = [
 		{oper: "find", out: "strLine", cond: {type: "comm", comm: "pushstring", param: `"BUY ALL"`, idx: 1}, result: 0},
 		{oper: "insert", line: "{strLine} + 1", str: [`pushstring " "`, `pushstring ""`, `callproperty QName(Namespace("http://adobe.com/AS3/2006/builtin"),"replace"), 2`]},
 	]}},
-	//buy all研究去空格，放大字号
+	//buy all研究去空格, 放大字号
 	{env: "all", search: {str: `_("BUY ALL");`, addi: [{str: `Research`, type: "y"}], type: "method"}, result: [], pcode: {name: "initializeElement_research.pcode", modify: [
 		{oper: "find", out: "fontSizeLine1", cond: {type: "comm", comm: "pushbyte", param: "26", idx: 1}, result: 0},
 		{oper: "replace", line: "{fontSizeLine1}", str: [`pushbyte 30`]},
@@ -34,7 +34,7 @@ export const replaceList1: ReplaceInfo[] = [
 		{oper: "find", out: "strLine", cond: {type: "comm", comm: "pushstring", param: `"BUY ALL"`, idx: 1}, result: 0},
 		{oper: "insert", line: "{strLine} + 1", str: [`pushstring " "`, `pushstring ""`, `callproperty QName(Namespace("http://adobe.com/AS3/2006/builtin"),"replace"), 2`]},
 	]}},
-	//语言-改"中文"，检测中文
+	//语言-改"中文", 检测中文
 	{env: "all", search: {str: `Español`, addi: [], type: "cinit"}, result: [], pcode: {name: "translation.pcode", modify: [
 		{oper: "find", out: "langLine", cond: {type: "comm", comm: "pushstring", param: `"Español"`, idx: 1}, result: 0},
 		{oper: "replace", line: "{langLine}", str: [`pushstring "中文"`]},
@@ -557,7 +557,7 @@ export function indexPcode(pcodesInfo: PcodeInfo[]) {
 	})
 }
 
-export async function startFindHardCode(env: "pc" | "phone", abcPath: string, scriptPath: string, pcodeFilePrefix: string, paramPrefix: string) {
+export async function startFindHardCode(env: "pc" | "phone", abcPath: string, scriptPath: string, pcodeFilePrefix: string) {
 	let abcInfo = readABC(abcPath);
 
 	let allFiles = listFiles(scriptPath, (name) => name.endsWith(".as"));
