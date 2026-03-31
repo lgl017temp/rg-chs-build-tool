@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "fs";
-import { resolve } from "path";
+import { isAbsolute, join, resolve } from "path";
 import { PcodeInfo, ReplaceInfo } from "./types";
 
 export const replaceList1: ReplaceInfo[] = [
@@ -201,13 +201,6 @@ export const replaceList2: ReplaceInfo[] = [
 	]}},
 ]
 
-let args = process.argv.slice(2);
-
-let replaceList = replaceList1.slice();
-if (args[0] && args[0] === "cheat") {
-	replaceList.push(...replaceList2);
-}
-
 export function listFiles(path: string, filter: (name: string) => boolean, result: string[] = [], subPath: string[] = []) {
 	let finalPath = [path, ...subPath].join("/");
 
@@ -235,7 +228,7 @@ export function listFiles(path: string, filter: (name: string) => boolean, resul
 	return result;
 }
 
-export function findFuncs(env: "pc" | "phone", path: string, abc: Record<string, string>, scriptPath: string) {
+export function findFuncs(replaceList: ReplaceInfo[], env: "pc" | "phone", path: string, abc: Record<string, string>, scriptPath: string) {
 	let str = readFileSync(path, "utf-8");
 
 	let lastFunc = "";
@@ -558,41 +551,55 @@ export function indexPcode(pcodesInfo: PcodeInfo[]) {
 }
 
 export async function startFindHardCode(env: "pc" | "phone", abcPath: string, scriptPath: string, pcodeFilePrefix: string) {
+	let args = await _startFindHardCode(env, abcPath, scriptPath, pcodeFilePrefix, true);
+	return args.filter(d => d).map(d => {
+		if (d![0].includes(" ") || d![0].includes("&0")) {
+			return `\\"${d![0]}\\" ../${d![1]} ${d![2]}`;
+		} else {
+			return `${d![0]} ../${d![1]} ${d![2]}`;
+		}
+	}).join(" ");
+}
+
+export async function _startFindHardCode(env: "pc" | "phone", abcPath: string, scriptPath: string, pcodeFilePrefix: string, toPackageJson: boolean) {
+	let args = process.argv.slice(2);
+	let replaceList = replaceList1.slice();
+	if (args[0] && args[0] === "cheat") {
+		replaceList.push(...replaceList2);
+	}
+	replaceList = replaceList.map(d => ({...d, result: []}));
+
 	let abcInfo = readABC(abcPath);
 
 	let allFiles = listFiles(scriptPath, (name) => name.endsWith(".as"));
 
 	allFiles.forEach(file => {
-		findFuncs(env, file, abcInfo, scriptPath);
+		findFuncs(replaceList, env, file, abcInfo, scriptPath);
 	});
 
 	let result = replaceList.filter(info => info.env === env || info.env === "all").map(replace => {
 		if (!replace.result.length) {
 			console.warn("find code fail: " + JSON.stringify(replace));
-			return "";
+			return;
 		}
 		if (replace.result.length > 1) {
 			console.warn("find code in multi place: " + JSON.stringify(replace));
-			return "";
+			return;
 		}
 
 		let dup = replaceList.filter(r => r.result[0] && r.result[0].method === replace.result[0].method);
 		if (dup.length > 1) {
 			console.warn("multi replace in same place: " + JSON.stringify(dup));
-			return "";
+			return;
 		}
 
 		// if (replace.pcode.name === "buyRubyBoundsConfirm.pcode") {
 		// 	console.log(replace);
 		// }
 		genPcode(replace, pcodeFilePrefix);
-
-		if (replace.result[0].class.includes(" ") || replace.result[0].class.includes("&0")) {
-			return `\\"${replace.result[0].class.replace(/:/g, ".").replace(/\"/g, "\\\\\\\"")}\\" ../${pcodeFilePrefix + "/" + replace.pcode.name} ${replace.result[0].methodBodyIdx}`;
-		} else {
-			return `${replace.result[0].class.replace(/:/g, ".").replace(/\"/g, "\\\\\\\"")} ../${pcodeFilePrefix + "/" + replace.pcode.name} ${replace.result[0].methodBodyIdx}`;
-		}
-	}).join(" ");
+		
+		return [replace.result[0].class.replace(/:/g, ".").replace(/\"/g, "\\\\\\\""), toPackageJson ? pcodeFilePrefix + "/" + replace.pcode.name : join(pcodeFilePrefix, replace.pcode.name), replace.result[0].methodBodyIdx];
+	});
 
 	// console.log(JSON.stringify(replaceList));
 	return result;

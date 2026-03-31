@@ -2,21 +2,29 @@ import { text, password, autocomplete, path, select, confirm, groupMultiselect, 
 import * as newPCVersion from "./newPCVersion";
 import * as newPhoneVersion from "./newPhoneVersion";
 import * as handlePC from "./handlePC";
+import * as handlePhone from "./handlePhone";
 import { resolve as resolvePath } from "node:path";
 import iconv from "iconv-lite";
 import { setDistDir, setFFdecDir, setJavaDir, setNewApkPath, setOutDir, setSwfPCPath } from "./settings";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
+export enum FastLevel {
+	none = 0,
+	important = 1,
+	step = 2,
+	all = 3,
+}
+
 export interface RuntimeParams {
-	fast: boolean;
+	fast: FastLevel;
 	taskLogs: ReturnType<typeof taskLog>;
 }
 
 const ReturnKey = "**return**";
 const ResetKey = "**reset**";
 
-export type Options = newPCVersion.Options & newPhoneVersion.Options & handlePC.Options;
-export type RuntimeOptions = Options & RuntimeParams & newPCVersion.RuntimeParams & newPhoneVersion.RuntimeParams & handlePC.RuntimeParams;
+export type Options = newPCVersion.Options & newPhoneVersion.Options & handlePC.Options & handlePhone.Options;
+export type RuntimeOptions = Options & RuntimeParams & newPCVersion.RuntimeParams & newPhoneVersion.RuntimeParams & handlePC.RuntimeParams & handlePhone.RuntimeParams;
 
 export function gb2312Str(data: Buffer) {
 	return iconv.decode(data, 'gb2312');
@@ -84,12 +92,13 @@ async function main() {
 
 		taskLogs,
 
-		fast: false,
+		fast: FastLevel.important,
 
 		swfPhonePath: "",
 		newApkVersionName: "",
 		newApkVersionCode: -1,
-		patchPCParam: "",
+		patchPCParam: [],
+		patchPhoneParam: [],
 	};
 
 	try {
@@ -107,8 +116,7 @@ async function menu(options: RuntimeOptions) {
 	const key = await select({
 		message: '功能菜单',
 		options: [
-			{ value: 'startFast', label: '快速执行', hint: '使用配置的信息执行, 仅询问关键步骤和信息'},
-			{ value: 'start', label: '执行', hint: '每一步都询问'},
+			{ value: 'start', label: '执行'},
 			{ value: 'settings', label: '修改配置', hint: '文件路径等, 也可以执行时修改'},
 			{ value: ReturnKey, label: '退出'},
 		],
@@ -123,11 +131,29 @@ async function menu(options: RuntimeOptions) {
 				break;
 			}
 		}
-	} else if (key === "startFast") {
-		options.fast = true;
-		await start(options);
 	} else if (key === "start") {
-		options.fast = false;
+		await selectLevel(options);
+	} else {
+		let never: never = key;
+	}
+}
+
+async function selectLevel(options: RuntimeOptions) {
+	const key = await select<keyof typeof FastLevel | typeof ReturnKey>({
+		message: '交互等级',
+		options: [
+			{ value: 'none', label: '全自动', hint: '完全使用配置, 仅配置无效时询问'},
+			{ value: 'important', label: '仅关键步骤', hint: '+关键步骤询问'},
+			{ value: 'step', label: '大步骤', hint: '+大步骤询问'},
+			{ value: 'all', label: '所有', hint: '所有参数均询问'},
+			{ value: ReturnKey, label: '返回'},
+		],
+	});
+
+	if (key === ReturnKey || isCancel(key)) {
+		return false;
+	} else if (key === "none" || key === "important" || key === "step" || key === "all") {
+		options.fast = FastLevel[key];
 		await start(options);
 	} else {
 		let never: never = key;
@@ -136,9 +162,9 @@ async function menu(options: RuntimeOptions) {
 
 async function start(options: RuntimeOptions) {
 	await newPCVersion.main(options);
-	// await newPhoneVersion.main(options);
+	await newPhoneVersion.main(options);
 	await handlePC.main(options);
-	// await handlePhone.main(options);
+	await handlePhone.main(options);
 
 	// box(`处理完成, 最终生成结果在${options.distDir}中`);
 }

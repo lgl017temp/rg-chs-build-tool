@@ -1,7 +1,7 @@
 import { box, confirm, path, progress, spinner, taskLog, tasks } from "@clack/prompts";
 import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { gb2312Str, RuntimeOptions } from ".";
+import { FastLevel, gb2312Str, RuntimeOptions } from ".";
 import { join, resolve } from "node:path";
 import { setOutDir, setSwfPCPath, validOutDir, validSwfPCPath } from "./settings";
 
@@ -19,7 +19,7 @@ export interface Options {
 
 let currLs: ChildProcessWithoutNullStreams | undefined;
 export async function main(options: RuntimeOptions) {
-	if (!options.fast) {
+	if (options.fast >= FastLevel.step) {
 		const needRun0PC = await confirm({
 			message: "执行PC端反编译?",
 		});
@@ -31,10 +31,10 @@ export async function main(options: RuntimeOptions) {
 	
 	box("PC端反编译");
 
-	if (!options.fast || validOutDir(options.outDir)) {
+	if ((options.fast >= FastLevel.all) || validOutDir(options.outDir)) {
 		await setOutDir(options);
 	}
-	if (!options.fast || validSwfPCPath(options.swfPCPath)) {
+	if ((options.fast >= FastLevel.all) || validSwfPCPath(options.swfPCPath)) {
 		await setSwfPCPath(options);
 	}
 
@@ -43,27 +43,27 @@ export async function main(options: RuntimeOptions) {
 	});
 
 	await tasks([
-		// {
-		// 	title: '删除旧文件',
-		// 	task: async (message) => {
-		// 		await deleteOldFile(options);
-		// 		return '删除旧文件完成';
-		// 	},
-		// },
-		// {
-		// 	title: '生成反编译代码',
-		// 	task: async (message) => {
-		// 		await exportScript(options, message);
-		// 		return '生成反编译代码完成';
-		// 	},
-		// },
-		// {
-		// 	title: '生成反编译PCode',
-		// 	task: async (message) => {
-		// 		await exportPcode(options, message);
-		// 		return '生成反编译PCode完成';
-		// 	},
-		// },
+		{
+			title: '删除旧文件',
+			task: async (message) => {
+				await deleteOldFile(options);
+				return '删除旧文件完成';
+			},
+		},
+		{
+			title: '生成反编译代码',
+			task: async (message) => {
+				await exportScript(options, message);
+				return '生成反编译代码完成';
+			},
+		},
+		{
+			title: '生成反编译PCode',
+			task: async (message) => {
+				await exportPcode(options, message);
+				return '生成反编译PCode完成';
+			},
+		},
 		{
 			title: '生成方法声明索引',
 			task: async (message) => {
@@ -246,13 +246,14 @@ async function exportABC(options: RuntimeOptions, message: (string: string) => v
 				"-dumpabc",
 				`${options.swfPCPath}`,
 				`${outFile}`,
-				">",
-				`${outFile}`,
 				"Translation",
 			], { shell: false, cwd: options.ffdecDir });
 		
+			let outStr = "";
 			currLs.stdout.on('data', (data: Buffer) => {
-				message(gb2312Str(data));
+				// message(gb2312Str(data));
+				let str = gb2312Str(data);
+				outStr += str;
 				
 				// console.log(`stdout: ${data}`);
 			});
@@ -271,6 +272,7 @@ async function exportABC(options: RuntimeOptions, message: (string: string) => v
 				if (signal === "SIGTERM") {
 					reject();
 				} else {
+					writeFileSync(outFile, outStr, "utf-8");
 					resolve();
 				}
 			});

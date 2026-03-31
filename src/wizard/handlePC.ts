@@ -1,15 +1,13 @@
-// rmdir /s /q .\out\scripts
-
 import { box, confirm, path, progress, spinner, taskLog, tasks } from "@clack/prompts";
 import { exec } from "node:child_process";
 import { rm } from "node:fs";
-import { RuntimeOptions } from ".";
-import { startFindHardCode } from "../findHardCode";
+import { FastLevel, RuntimeOptions } from ".";
+import { _startFindHardCode, startFindHardCode } from "../findHardCode";
 import { join } from "node:path";
 import { setOutDir, validOutDir } from "./settings";
 
 export interface RuntimeParams {
-	patchPCParam: string;
+	patchPCParam: string[][];
 }
 
 export interface Options {
@@ -17,9 +15,9 @@ export interface Options {
 }
 
 export async function main(options: RuntimeOptions) {
-	if (!options.fast) {
+	if (options.fast >= FastLevel.step) {
 		const needRun1PC = await confirm({
-			message: "执行PC端?",
+			message: "执行生成PC端修补代码?",
 		});
 		
 		if (!needRun1PC) {
@@ -29,7 +27,7 @@ export async function main(options: RuntimeOptions) {
 	
 	box("生成PC端修补代码");
 
-	if (!options.fast || validOutDir(options.outDir)) {
+	if ((options.fast >= FastLevel.all) || validOutDir(options.outDir)) {
 		await setOutDir(options);
 	}
 
@@ -46,11 +44,12 @@ export async function main(options: RuntimeOptions) {
 
 async function patchPC(options: RuntimeOptions) {
 	try {
-		let result = await startFindHardCode("pc", join(options.outDir, "abc.dmp"), join(options.outDir, "scripts"), join(options.outDir, "pcode"));
+		let result = await _startFindHardCode("pc", join(options.outDir, "abc.dmp"), join(options.outDir, "scripts"), join(options.outDir, "pcode"), false);
+		let finalResult = result.filter(d => d) as string[][];
 	
-		options.taskLogs.success("参数：" + result);
+		// options.taskLogs.success("参数：" + finalResult);
 	
-		options.patchPCParam = result;
+		options.patchPCParam = finalResult;
 	} catch (error) {
 		options.taskLogs.error("" + error);
 		throw error;

@@ -1,7 +1,7 @@
 import { box, confirm, path, progress, spinner, taskLog, tasks } from "@clack/prompts";
 import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { gb2312Str, RuntimeOptions } from ".";
+import { FastLevel, gb2312Str, RuntimeOptions } from ".";
 import { join, resolve } from "node:path";
 import { setNewApkPath, setOutDir, setSwfPCPath, validNewApkPath, validOutDir, validSwfPCPath } from "./settings";
 import JSZip from "jszip";
@@ -24,7 +24,7 @@ export interface Options {
 
 let currLs: ChildProcessWithoutNullStreams | undefined;
 export async function main(options: RuntimeOptions) {
-	if (!options.fast) {
+	if (options.fast >= FastLevel.step) {
 		const needRun0Phone = await confirm({
 			message: "执行Android端反编译?",
 		});
@@ -36,12 +36,12 @@ export async function main(options: RuntimeOptions) {
 
 	box("Android端反编译");
 
-	if (!options.fast || validOutDir(options.outDir)) {
+	if ((options.fast >= FastLevel.all) || validOutDir(options.outDir)) {
 		await setOutDir(options);
 	}
-	// if (!options.fast || validNewApkPath(options.newApkPath)) {
+	if ((options.fast >= FastLevel.important) || validNewApkPath(options.newApkPath)) {
 		await setNewApkPath(options);
-	// }
+	}
 
 	process.on('exit', () => {
 		currLs?.kill("SIGTERM");
@@ -231,8 +231,28 @@ async function exportPcode(options: RuntimeOptions, message: (string: string) =>
 				`${options.swfPhonePath}`
 			], { shell: false, cwd: options.ffdecDir });
 		
+			let files: number[] = [];
 			currLs.stdout.on('data', (data: Buffer) => {
-				message(gb2312Str(data));
+				let str = gb2312Str(data);
+				// let match = str.match(/Exported script (\d+)\/(\d+)/g);
+				let matches = str.match(/(\d+)\/(\d+)/g);
+				if (matches) {
+					matches.forEach(matchStr => {
+						let match = matchStr.match(/(\d+)\/(\d+)/);
+						if (match) {
+							let idx = match[1];
+							let max = match[2];
+							if (!files.length) {
+								files = new Array(+max).fill(0);
+							}
+							files[+idx - 1] = 1;
+						}
+					});
+				}
+				let finishedCount = files.filter(d => d).length;
+				let notFinishedCount = files.length - finishedCount;
+				let notFinish = () => `${files.map((d, i) => ({idx: i, finish: !!d})).filter(d => !d.finish).map(d => d.idx + 1).join(",")}`;
+				message(`[${finishedCount}/${files.length}] (${notFinishedCount < 10 ? notFinish() : `...${notFinishedCount}项`}) ` + str);
 				
 				// console.log(`stdout: ${data}`);
 			});
@@ -278,13 +298,14 @@ async function exportABC(options: RuntimeOptions, message: (string: string) => v
 				"-dumpabc",
 				`${options.swfPhonePath}`,
 				`${outFile}`,
-				">",
-				`${outFile}`,
 				"Translation",
 			], { shell: false, cwd: options.ffdecDir });
 		
+			let outStr = "";
 			currLs.stdout.on('data', (data: Buffer) => {
-				message(gb2312Str(data));
+				// message(gb2312Str(data));
+				let str = gb2312Str(data);
+				outStr += str;
 				
 				// console.log(`stdout: ${data}`);
 			});
@@ -303,6 +324,7 @@ async function exportABC(options: RuntimeOptions, message: (string: string) => v
 				if (signal === "SIGTERM") {
 					reject();
 				} else {
+					writeFileSync(outFile, outStr, "utf-8");
 					resolve();
 				}
 			});
