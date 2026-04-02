@@ -11,16 +11,15 @@ export interface RuntimeParams {
 }
 
 export interface Options {
-	distDir: string,
 }
 
 export async function main(options: RuntimeOptions) {
 	if (options.fast >= FastLevel.step) {
-		const needRun1PC = await confirm({
+		const needRun = await confirm({
 			message: "执行生成PC端修补代码?",
 		});
 		
-		if (!needRun1PC) {
+		if (!needRun) {
 			return;
 		}
 	}

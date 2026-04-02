@@ -3,9 +3,12 @@ import * as newPCVersion from "./newPCVersion";
 import * as newPhoneVersion from "./newPhoneVersion";
 import * as handlePC from "./handlePC";
 import * as handlePhone from "./handlePhone";
+import * as handleTrans from "./handleTrans";
+import * as repackPC from "./repackPC";
+import * as repackPhone from "./repackPhone";
 import { resolve as resolvePath } from "node:path";
 import iconv from "iconv-lite";
-import { setDistDir, setFFdecDir, setJavaDir, setNewApkPath, setOutDir, setSwfPCPath } from "./settings";
+import { setDeflateUtilPath, setDistDir, setFFdecDir, setFontPCDir, setFontPhoneDir, setJavaDir, setNewApkPath, setOutDir, setPoeditDir, setSwfPCPath, setTransPath, setV434ApkPath } from "./settings";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
 export enum FastLevel {
@@ -23,20 +26,22 @@ export interface RuntimeParams {
 const ReturnKey = "**return**";
 const ResetKey = "**reset**";
 
-export type Options = newPCVersion.Options & newPhoneVersion.Options & handlePC.Options & handlePhone.Options;
-export type RuntimeOptions = Options & RuntimeParams & newPCVersion.RuntimeParams & newPhoneVersion.RuntimeParams & handlePC.RuntimeParams & handlePhone.RuntimeParams;
-
-export function gb2312Str(data: Buffer) {
-	return iconv.decode(data, 'gb2312');
-}
+export type Options = newPCVersion.Options & newPhoneVersion.Options & handlePC.Options & handlePhone.Options & handleTrans.Options & repackPC.Options & repackPhone.Options;
+export type RuntimeOptions = Options & RuntimeParams & newPCVersion.RuntimeParams & newPhoneVersion.RuntimeParams & handlePC.RuntimeParams & handlePhone.RuntimeParams & handleTrans.RuntimeParams & repackPC.RuntimeParams & repackPhone.RuntimeParams;
 
 export function getDefaultOption() {
 	let options: Options = {
 		javaDir: resolvePath("jdk-17.0.2"),
 		ffdecDir: resolvePath("FFdec2"),
+		poeditDir: resolvePath("Poedit"),
+		deflateUtilPath: resolvePath("deflateUtil.jar"),
 		
 		swfPCPath: resolvePath("resource/RealmGrinderDesktop.swf"),
 		newApkPath: resolvePath("resource/RealmGrinder_new.apk"),
+		v434ApkPath: resolvePath("resource/RealmGrinder_4.3.4_APKPure.apk"),
+		transPath: resolvePath("resource/RG-翻译表.xlsx"),
+		fontPCDir: resolvePath("resource/font_pc"),
+		fontPhoneDir: resolvePath("resource/font_phone"),
 
 		outDir: resolvePath("out"),
 		distDir: resolvePath("dist"),
@@ -83,9 +88,15 @@ async function main() {
 	const finalOptions: RuntimeOptions = {
 		javaDir: resolvePath(options.javaDir),
 		ffdecDir: resolvePath(options.ffdecDir),
+		poeditDir: resolvePath(options.poeditDir),
+		deflateUtilPath: resolvePath(options.deflateUtilPath),
 		
 		swfPCPath: resolvePath(options.swfPCPath),
 		newApkPath: resolvePath(options.newApkPath),
+		v434ApkPath: resolvePath(options.v434ApkPath),
+		transPath: resolvePath(options.transPath),
+		fontPCDir: resolvePath(options.fontPCDir),
+		fontPhoneDir: resolvePath(options.fontPhoneDir),
 		
 		outDir: resolvePath(options.outDir),
 		distDir: resolvePath(options.distDir),
@@ -161,10 +172,13 @@ async function selectLevel(options: RuntimeOptions) {
 }
 
 async function start(options: RuntimeOptions) {
-	await newPCVersion.main(options);
-	await newPhoneVersion.main(options);
+	// await newPCVersion.main(options);
+	// await newPhoneVersion.main(options);
 	await handlePC.main(options);
 	await handlePhone.main(options);
+	// await handleTrans.main(options);
+	await repackPC.main(options);
+	await repackPhone.main(options);
 
 	// box(`处理完成, 最终生成结果在${options.distDir}中`);
 }
@@ -174,12 +188,18 @@ async function settings(options: RuntimeOptions) {
 		message: '选择一个配置',
 		options: [
 			{ value: ReturnKey, label: '返回'},
-			{ value: 'javaDir', label: 'jdk目录', hint: options.javaDir},
-			{ value: 'ffdecDir', label: 'ffdec目录', hint: options.ffdecDir},
-			{ value: 'swfPCPath', label: 'pc端swf路径', hint: options.swfPCPath},
+			{ value: 'javaDir', label: 'JDK目录', hint: options.javaDir},
+			{ value: 'ffdecDir', label: 'FFDec目录', hint: options.ffdecDir},
+			{ value: 'poeditDir', label: 'Poedit目录', hint: options.poeditDir},
+			{ value: 'deflateUtilPath', label: 'deflateUtil.jar路径', hint: options.deflateUtilPath},
+			{ value: 'swfPCPath', label: 'PC端swf路径', hint: options.swfPCPath},
 			{ value: 'newApkPath', label: '最新apk路径', hint: options.newApkPath},
+			{ value: 'v434ApkPath', label: '4.3.4版本apk路径', hint: options.newApkPath},
+			{ value: 'fontPCDir', label: 'PC端字体目录', hint: options.fontPCDir},
+			{ value: 'fontPhoneDir', label: 'Android端字体目录', hint: options.fontPhoneDir},
 			{ value: 'outDir', label: '中间文件输出目录', hint: options.outDir},
 			{ value: 'distDir', label: '打包结果输出目录', hint: options.distDir},
+			{ value: 'transPath', label: '翻译文件路径', hint: options.transPath},
 			{ value: ResetKey, label: '重置'},
 		],
 		maxItems: 10,
@@ -197,14 +217,26 @@ async function settings(options: RuntimeOptions) {
 		await setJavaDir(options);
 	} else if (key === "ffdecDir") {
 		await setFFdecDir(options);
+	} else if (key === "poeditDir") {
+		await setPoeditDir(options);
+	} else if (key === "deflateUtilPath") {
+		await setDeflateUtilPath(options);
 	} else if (key === "swfPCPath") {
 		await setSwfPCPath(options);
 	} else if (key === "newApkPath") {
 		await setNewApkPath(options);
+	} else if (key === "v434ApkPath") {
+		await setV434ApkPath(options);
 	} else if (key === "outDir") {
 		await setOutDir(options);
 	} else if (key === "distDir") {
 		await setDistDir(options);
+	} else if (key === "transPath") {
+		await setTransPath(options);
+	} else if (key === "fontPCDir") {
+		await setFontPCDir(options);
+	} else if (key === "fontPhoneDir") {
+		await setFontPhoneDir(options);
 	} else {
 		let never: never = key;
 	}

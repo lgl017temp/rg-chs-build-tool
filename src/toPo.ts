@@ -6,7 +6,7 @@ import { TransData } from "./types";
 const transExcelPath = "out/结果.xlsx";
 const poPath = "out/13_realmgrinder_es_ES.po"
 
-async function readTransExcel() {
+async function readTransExcel(transExcelPath: string) {
 	if (!existsSync(transExcelPath)) {
 		console.log("翻译文件不存在");
 		return [];
@@ -87,7 +87,7 @@ function handlePlural(data: TransData[]) {
 	return Object.values(dupMap);
 }
 
-function writePo(data: TransData[]) {
+function writePo(data: TransData[], poPath: string) {
 	let result: string[] = [`msgid ""
 msgstr ""
 "Project-Id-Version: \\n"
@@ -154,10 +154,14 @@ function handleStr(str: string) {
 }
 
 async function main() {
-	let transList = await readTransExcel();
+	_main(transExcelPath, poPath);
+}
+
+export async function _main(transExcelPath: string, poPath: string) {
+	let transList = await readTransExcel(transExcelPath);
 	transList = handlePlural(transList);
 
-	writePo(transList);
+	writePo(transList, poPath);
 }
 
 main();

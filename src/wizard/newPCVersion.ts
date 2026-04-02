@@ -1,9 +1,10 @@
 import { box, confirm, path, progress, spinner, taskLog, tasks } from "@clack/prompts";
 import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { FastLevel, gb2312Str, RuntimeOptions } from ".";
+import { FastLevel, RuntimeOptions } from ".";
 import { join, resolve } from "node:path";
 import { setOutDir, setSwfPCPath, validOutDir, validSwfPCPath } from "./settings";
+import { gb2312Str } from "./util";
 
 export interface RuntimeParams {
 }
@@ -20,11 +21,11 @@ export interface Options {
 let currLs: ChildProcessWithoutNullStreams | undefined;
 export async function main(options: RuntimeOptions) {
 	if (options.fast >= FastLevel.step) {
-		const needRun0PC = await confirm({
+		const needRun = await confirm({
 			message: "执行PC端反编译?",
 		});
 		
-		if (!needRun0PC) {
+		if (!needRun) {
 			return;
 		}
 	}

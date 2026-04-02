@@ -1,11 +1,12 @@
 import { box, confirm, path, progress, spinner, taskLog, tasks } from "@clack/prompts";
 import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { FastLevel, gb2312Str, RuntimeOptions } from ".";
+import { FastLevel, RuntimeOptions } from ".";
 import { join, resolve } from "node:path";
 import { setNewApkPath, setOutDir, setSwfPCPath, validNewApkPath, validOutDir, validSwfPCPath } from "./settings";
 import JSZip from "jszip";
 import AppInfoParser from "app-info-parser";
+import { gb2312Str } from "./util";
 
 export interface RuntimeParams {
 	newApkVersionName: string;
@@ -25,11 +26,11 @@ export interface Options {
 let currLs: ChildProcessWithoutNullStreams | undefined;
 export async function main(options: RuntimeOptions) {
 	if (options.fast >= FastLevel.step) {
-		const needRun0Phone = await confirm({
+		const needRun = await confirm({
 			message: "执行Android端反编译?",
 		});
 		
-		if (!needRun0Phone) {
+		if (!needRun) {
 			return;
 		}
 	}

@@ -64,7 +64,7 @@ function extractText(path: string, result: TransData[]) {
 	return result;
 }
 
-async function readTransExcel() {
+async function readTransExcel(transExcelPath: string) {
 	if (!existsSync(transExcelPath)) {
 		console.log("翻译文件不存在");
 		return [];
@@ -130,7 +130,7 @@ function matchTrans(ori: TransData[], trans: TransData[]) {
 	return result;
 }
 
-async function writeExcel(data: TransData[]) {
+async function writeExcel(data: TransData[], outExcelPath: string) {
 	let wb = new ExcelJS.Workbook();
 	let sheet = wb.addWorksheet();
 
@@ -181,6 +181,10 @@ async function writeExcel(data: TransData[]) {
 }
 
 async function main() {
+	_main(scriptPath, scriptPhonePath, transExcelPath, outExcelPath);
+}
+
+export async function _main(scriptPath: string, scriptPhonePath: string, transExcelPath: string, outExcelPath: string) {
 	let allFiles = listFiles(scriptPath, (name) => name.endsWith(".as"));
 	let allPhoneFiles = listFiles(scriptPhonePath, (name) => name.endsWith(".as"));
 
@@ -193,11 +197,11 @@ async function main() {
 	});
 	oriList = oriList.filter((d, i, arr) => arr.findIndex(dd => dd.oriText === d.oriText) === i);
 
-	let transList = await readTransExcel();
+	let transList = await readTransExcel(transExcelPath);
 
 	let result = matchTrans(oriList, transList);
 
-	await writeExcel(result);
+	await writeExcel(result, outExcelPath);
 }
 
 main();

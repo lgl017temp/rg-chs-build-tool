@@ -554,9 +554,9 @@ export async function startFindHardCode(env: "pc" | "phone", abcPath: string, sc
 	let args = await _startFindHardCode(env, abcPath, scriptPath, pcodeFilePrefix, true);
 	return args.filter(d => d).map(d => {
 		if (d![0].includes(" ") || d![0].includes("&0")) {
-			return `\\"${d![0]}\\" ../${d![1]} ${d![2]}`;
+			return `\\"${d![0].replace(/\"/g, "\\\\\\\"")}\\" ../${d![1]} ${d![2]}`;
 		} else {
-			return `${d![0]} ../${d![1]} ${d![2]}`;
+			return `${d![0].replace(/\"/g, "\\\\\\\"")} ../${d![1]} ${d![2]}`;
 		}
 	}).join(" ");
 }
@@ -598,7 +598,7 @@ export async function _startFindHardCode(env: "pc" | "phone", abcPath: string, s
 		// }
 		genPcode(replace, pcodeFilePrefix);
 		
-		return [replace.result[0].class.replace(/:/g, ".").replace(/\"/g, "\\\\\\\""), toPackageJson ? pcodeFilePrefix + "/" + replace.pcode.name : join(pcodeFilePrefix, replace.pcode.name), replace.result[0].methodBodyIdx];
+		return [replace.result[0].class.replace(/:/g, "."), toPackageJson ? pcodeFilePrefix + "/" + replace.pcode.name : join(pcodeFilePrefix, replace.pcode.name), replace.result[0].methodBodyIdx];
 	});
 
 	// console.log(JSON.stringify(replaceList));
