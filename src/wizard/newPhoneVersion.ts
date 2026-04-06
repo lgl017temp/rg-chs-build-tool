@@ -97,7 +97,7 @@ export async function main(options: RuntimeOptions) {
 async function deleteOldFile(options: RuntimeOptions) {
 	//rmdir /s /q .\out\phone\scripts
 	try {
-		rmSync(options.outDir + "/phone/scripts", { recursive: true, force: true });
+		rmSync(join(options.outDir, "phone", "scripts"), { recursive: true, force: true });
 	} catch (error) {
 		options.taskLogs.error("" + error);
 	}
@@ -126,7 +126,7 @@ async function getApkVersion(options: RuntimeOptions) {
 		let parser = new AppInfoParser(options.newApkPath);
 		let info = await parser.parse();
 
-		options.taskLogs.success(`version: ${info.versionName}(${info.versionCode})`);
+		options.taskLogs.success(`版本号: ${info.versionName}(${info.versionCode})`);
 
 		options.newApkVersionCode = info.versionCode;
 		options.newApkVersionName = info.versionName;

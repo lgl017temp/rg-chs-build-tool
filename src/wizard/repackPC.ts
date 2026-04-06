@@ -1,9 +1,9 @@
 import { box, confirm, path, progress, spinner, taskLog, tasks } from "@clack/prompts";
 import { ChildProcessWithoutNullStreams, spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { FastLevel, RuntimeOptions } from ".";
 import { join, resolve } from "node:path";
-import { setOutDir, setSwfPCPath, setTransPath, validOutDir, validSwfPCPath, validTransPath } from "./settings";
+import { setFontPCDir, setOutDir, setResourceDir, setSwfPCPath, setTransPath, validFontPCDir, validOutDir, validResourceDir, validSwfPCPath, validTransPath } from "./settings";
 import { gb2312Str } from "./util";
 
 export interface RuntimeParams {
@@ -18,6 +18,7 @@ export interface Options {
 	
 	swfPCPath: string,
 	fontPCDir: string,
+	resourceDir: string,
 	
 	outDir: string,
 	distDir: string,
@@ -48,21 +49,16 @@ export async function main(options: RuntimeOptions) {
 	if ((options.fast >= FastLevel.all) || validSwfPCPath(options.swfPCPath)) {
 		await setSwfPCPath(options);
 	}
+	if ((options.fast >= FastLevel.all) || validFontPCDir(options.fontPCDir)) {
+		await setFontPCDir(options);
+	}
+	if ((options.fast >= FastLevel.all) || validResourceDir(options.resourceDir)) {
+		await setResourceDir(options);
+	}
 
 	process.on('exit', () => {
 		currLs?.kill("SIGTERM");
 	});
-
-	//TODO
-	// echo copyToDist
-	// rmdir /s /q .\dist\pc
-	// mkdir .\dist\pc
-	// copy .\out\RealmGrinderDesktop.swf .\dist\pc
-	// mkdir .\dist\pc\fonts
-	// copy .\resource\other\floating_bitmap.fnt .\dist\pc\fonts
-	// mkdir .\dist\pc\images
-	// copy .\resource\other\realmgrinderui_new.png .\dist\pc\images
-	// copy .\resource\other\realmgrinderui2_new.png .\dist\pc\images
 
 	await tasks([
 		{
@@ -70,6 +66,13 @@ export async function main(options: RuntimeOptions) {
 			task: async (message) => {
 				await replaceTrans(options, message);
 				return '生成替换后swf文件完成';
+			},
+		},
+		{
+			title: '复制文件及资源到打包结果目录',
+			task: async (message) => {
+				await copyToDist(options);
+				return '复制文件及资源到打包结果目录完成';
 			},
 		},
 	]);
@@ -117,9 +120,6 @@ async function replaceTrans(options: RuntimeOptions, message: (string: string) =
 						}
 					});
 				}
-				// let finishedCount = files.filter(d => d).length;
-				// let notFinishedCount = files.length - finishedCount;
-				// let notFinish = () => `${files.map((d, i) => ({idx: i, finish: !!d})).filter(d => !d.finish).map(d => d.idx + 1).join(",")}`;
 				message(`[${count}/${options.patchPCParam.length}] ` + str);
 				
 				// console.log(`stdout: ${data}`);
@@ -147,4 +147,35 @@ async function replaceTrans(options: RuntimeOptions, message: (string: string) =
 			reject(error);
 		}
 	});
+}
+async function copyToDist(options: RuntimeOptions) {
+	// rmdir /s /q .\dist\pc
+	// mkdir .\dist\pc
+
+	// copy .\out\RealmGrinderDesktop.swf .\dist\pc
+	// mkdir .\dist\pc\fonts
+	// copy .\resource\other\floating_bitmap.fnt .\dist\pc\fonts
+	// mkdir .\dist\pc\images
+	// copy .\resource\other\realmgrinderui_new.png .\dist\pc\images
+	// copy .\resource\other\realmgrinderui2_new.png .\dist\pc\images
+	try {
+		let distDir = join(options.distDir, "pc");
+		let fontsDir = join(distDir, "fonts");
+		let imagesDir = join(distDir, "images");
+
+		rmSync(distDir, { recursive: true, force: true });
+
+		mkdirSync(distDir, { recursive: true });
+		copyFileSync(join(options.outDir, "RealmGrinderDesktop.swf"), join(distDir, "RealmGrinderDesktop.swf"));
+		
+		mkdirSync(fontsDir, { recursive: true });
+		copyFileSync(join(options.resourceDir, "floating_bitmap.fnt"), join(fontsDir, "floating_bitmap.fnt"));
+		
+		mkdirSync(imagesDir, { recursive: true });
+		copyFileSync(join(options.resourceDir, "realmgrinderui_new.png"), join(imagesDir, "realmgrinderui_new.png"));
+		copyFileSync(join(options.resourceDir, "realmgrinderui2_new.png"), join(imagesDir, "realmgrinderui2_new.png"));
+	} catch (error) {
+		options.taskLogs.error("" + error);
+		throw error;
+	}
 }

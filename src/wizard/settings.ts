@@ -148,7 +148,22 @@ export function validDeflateUtilPath(val?: string) {
 	if (!val || !existsSync(val)) {
 		return "文件不存在";
 	}
-	if (statSync(val).isDirectory() || !val.endsWith(".jar文件")) {
+	if (statSync(val).isDirectory() || !val.endsWith(".jar")) {
+		return "不是.jar文件";
+	}
+}
+
+export async function setManifestEditorPath(options: RuntimeOptions) {
+	await setPath(options, "manifestEditorPath", {
+		message: "选择ManifestEditor-2.0.jar路径",
+		validate: validManifestEditorPath,
+	});
+}
+export function validManifestEditorPath(val?: string) {
+	if (!val || !existsSync(val)) {
+		return "文件不存在";
+	}
+	if (statSync(val).isDirectory() || !val.endsWith(".jar")) {
 		return "不是.jar文件";
 	}
 }
@@ -166,6 +181,22 @@ export function validPoeditDir(val?: string) {
 	}
 	if (!statSync(val).isDirectory() || !existsSync(resolve(val, "GettextTools", "bin", "msgfmt.exe"))) {
 		return "不是Poedit目录";
+	}
+}
+
+export async function setAndroidBuildToolsDir(options: RuntimeOptions) {
+	await setPath(options, "androidBuildToolsDir", {
+		message: "选择安卓编译工具目录",
+		directory: true,
+		validate: validAndroidBuildToolsDir,
+	});
+}
+export function validAndroidBuildToolsDir(val?: string) {
+	if (!val || !existsSync(val)) {
+		return "目录不存在";
+	}
+	if (!statSync(val).isDirectory() || !existsSync(resolve(val, "zipalign.exe"))) {
+		return "不是安卓编译工具目录";
 	}
 }
 
@@ -198,5 +229,36 @@ export function validFontPhoneDir(val?: string) {
 	}
 	if (!statSync(val).isDirectory()) {
 		return "不是目录";
+	}
+}
+
+export async function setResourceDir(options: RuntimeOptions) {
+	await setPath(options, "resourceDir", {
+		message: "选择图片资源目录",
+		directory: true,
+		validate: validResourceDir,
+	});
+}
+export function validResourceDir(val?: string) {
+	if (!val || !existsSync(val)) {
+		return "目录不存在";
+	}
+	if (!statSync(val).isDirectory()) {
+		return "不是目录";
+	}
+}
+
+export async function setKeystorePath(options: RuntimeOptions) {
+	await setPath(options, "keystorePath", {
+		message: "选择签名密钥路径",
+		validate: validKeystorePath,
+	});
+}
+export function validKeystorePath(val?: string) {
+	if (!val || !existsSync(val)) {
+		return "文件不存在";
+	}
+	if (statSync(val).isDirectory() || !val.endsWith(".keystore")) {
+		return "不是.keystore文件";
 	}
 }

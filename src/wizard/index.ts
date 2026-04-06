@@ -8,8 +8,9 @@ import * as repackPC from "./repackPC";
 import * as repackPhone from "./repackPhone";
 import { resolve as resolvePath } from "node:path";
 import iconv from "iconv-lite";
-import { setDeflateUtilPath, setDistDir, setFFdecDir, setFontPCDir, setFontPhoneDir, setJavaDir, setNewApkPath, setOutDir, setPoeditDir, setSwfPCPath, setTransPath, setV434ApkPath } from "./settings";
+import { setAndroidBuildToolsDir, setDeflateUtilPath, setDistDir, setFFdecDir, setFontPCDir, setFontPhoneDir, setJavaDir, setKeystorePath, setManifestEditorPath, setNewApkPath, setOutDir, setPoeditDir, setResourceDir, setSwfPCPath, setTransPath, setV434ApkPath } from "./settings";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 export enum FastLevel {
 	none = 0,
@@ -35,6 +36,8 @@ export function getDefaultOption() {
 		ffdecDir: resolvePath("FFdec2"),
 		poeditDir: resolvePath("Poedit"),
 		deflateUtilPath: resolvePath("deflateUtil.jar"),
+		manifestEditorPath: resolvePath("ManifestEditor-2.0.jar"),
+		androidBuildToolsDir: resolvePath("Android/Sdk/build-tools/34.0.0"),
 		
 		swfPCPath: resolvePath("resource/RealmGrinderDesktop.swf"),
 		newApkPath: resolvePath("resource/RealmGrinder_new.apk"),
@@ -42,6 +45,8 @@ export function getDefaultOption() {
 		transPath: resolvePath("resource/RG-翻译表.xlsx"),
 		fontPCDir: resolvePath("resource/font_pc"),
 		fontPhoneDir: resolvePath("resource/font_phone"),
+		resourceDir: resolvePath("resource/other"),
+		keystorePath: resolvePath("resource/realmgrinder.keystore"),
 
 		outDir: resolvePath("out"),
 		distDir: resolvePath("dist"),
@@ -90,6 +95,8 @@ async function main() {
 		ffdecDir: resolvePath(options.ffdecDir),
 		poeditDir: resolvePath(options.poeditDir),
 		deflateUtilPath: resolvePath(options.deflateUtilPath),
+		manifestEditorPath: resolvePath(options.manifestEditorPath),
+		androidBuildToolsDir: resolvePath(options.androidBuildToolsDir),
 		
 		swfPCPath: resolvePath(options.swfPCPath),
 		newApkPath: resolvePath(options.newApkPath),
@@ -97,6 +104,8 @@ async function main() {
 		transPath: resolvePath(options.transPath),
 		fontPCDir: resolvePath(options.fontPCDir),
 		fontPhoneDir: resolvePath(options.fontPhoneDir),
+		resourceDir: resolvePath(options.resourceDir),
+		keystorePath: resolvePath(options.keystorePath),
 		
 		outDir: resolvePath(options.outDir),
 		distDir: resolvePath(options.distDir),
@@ -172,15 +181,15 @@ async function selectLevel(options: RuntimeOptions) {
 }
 
 async function start(options: RuntimeOptions) {
-	// await newPCVersion.main(options);
-	// await newPhoneVersion.main(options);
+	await newPCVersion.main(options);
+	await newPhoneVersion.main(options);
 	await handlePC.main(options);
 	await handlePhone.main(options);
-	// await handleTrans.main(options);
+	await handleTrans.main(options);
 	await repackPC.main(options);
 	await repackPhone.main(options);
 
-	// box(`处理完成, 最终生成结果在${options.distDir}中`);
+	box(`处理完成`);
 }
 
 async function settings(options: RuntimeOptions) {
@@ -192,11 +201,15 @@ async function settings(options: RuntimeOptions) {
 			{ value: 'ffdecDir', label: 'FFDec目录', hint: options.ffdecDir},
 			{ value: 'poeditDir', label: 'Poedit目录', hint: options.poeditDir},
 			{ value: 'deflateUtilPath', label: 'deflateUtil.jar路径', hint: options.deflateUtilPath},
+			{ value: 'manifestEditorPath', label: 'ManifestEditor-2.0.jar路径', hint: options.manifestEditorPath},
+			{ value: 'androidBuildToolsDir', label: '安卓编译工具目录', hint: options.androidBuildToolsDir},
 			{ value: 'swfPCPath', label: 'PC端swf路径', hint: options.swfPCPath},
 			{ value: 'newApkPath', label: '最新apk路径', hint: options.newApkPath},
 			{ value: 'v434ApkPath', label: '4.3.4版本apk路径', hint: options.newApkPath},
 			{ value: 'fontPCDir', label: 'PC端字体目录', hint: options.fontPCDir},
 			{ value: 'fontPhoneDir', label: 'Android端字体目录', hint: options.fontPhoneDir},
+			{ value: 'resourceDir', label: '图片资源目录', hint: options.resourceDir},
+			{ value: 'keystorePath', label: '签名密钥路径', hint: options.keystorePath},
 			{ value: 'outDir', label: '中间文件输出目录', hint: options.outDir},
 			{ value: 'distDir', label: '打包结果输出目录', hint: options.distDir},
 			{ value: 'transPath', label: '翻译文件路径', hint: options.transPath},
@@ -221,6 +234,10 @@ async function settings(options: RuntimeOptions) {
 		await setPoeditDir(options);
 	} else if (key === "deflateUtilPath") {
 		await setDeflateUtilPath(options);
+	} else if (key === "manifestEditorPath") {
+		await setManifestEditorPath(options);
+	} else if (key === "androidBuildToolsDir") {
+		await setAndroidBuildToolsDir(options);
 	} else if (key === "swfPCPath") {
 		await setSwfPCPath(options);
 	} else if (key === "newApkPath") {
@@ -237,6 +254,10 @@ async function settings(options: RuntimeOptions) {
 		await setFontPCDir(options);
 	} else if (key === "fontPhoneDir") {
 		await setFontPhoneDir(options);
+	} else if (key === "resourceDir") {
+		await setResourceDir(options);
+	} else if (key === "keystorePath") {
+		await setKeystorePath(options);
 	} else {
 		let never: never = key;
 	}
@@ -254,4 +275,8 @@ async function writeConfig(options: RuntimeOptions, configFile: string) {
 	}
 }
 
-main();
+const moduleFilePath = fileURLToPath(import.meta.url);
+const isDirectlyEvalByNode = moduleFilePath === process.argv[1];
+if (isDirectlyEvalByNode) {
+	main();
+}

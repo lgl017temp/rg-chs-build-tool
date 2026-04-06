@@ -73,6 +73,7 @@ export async function main(options: RuntimeOptions) {
 				return '生成mo文件完成';
 			},
 		},
+		//TODO 检测资源变动，自动重新修改
 	]);
 }
 
@@ -111,7 +112,7 @@ async function genMo(options: RuntimeOptions) {
 			"y",
 			`${join(outDir, "13_realmgrinder_es_ES.mo")}`,
 			`${join(outDir, "13_realmgrinder_es_ES_compress.mo")}`,
-		], { shell: false, cwd: options.ffdecDir });
+		], { shell: false });
 	} catch (error) {
 		options.taskLogs.error("" + error);
 		throw error;

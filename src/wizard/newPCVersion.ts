@@ -78,7 +78,7 @@ export async function main(options: RuntimeOptions) {
 async function deleteOldFile(options: RuntimeOptions) {
 	//rmdir /s /q .\out\scripts
 	try {
-		rmSync(options.outDir + "/scripts", { recursive: true, force: true });
+		rmSync(join(options.outDir, "scripts"), { recursive: true, force: true });
 	} catch (error) {
 		options.taskLogs.error("" + error);
 	}

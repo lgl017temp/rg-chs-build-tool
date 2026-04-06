@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "
 import { resolve } from "path";
 import ExcelJS, { ValueType } from "exceljs";
 import { TransData } from "./types";
+import { fileURLToPath } from "url";
 
 const transExcelPath = "out/结果.xlsx";
 const poPath = "out/13_realmgrinder_es_ES.po"
@@ -164,4 +165,8 @@ export async function _main(transExcelPath: string, poPath: string) {
 	writePo(transList, poPath);
 }
 
-main();
+const moduleFilePath = fileURLToPath(import.meta.url);
+const isDirectlyEvalByNode = moduleFilePath === process.argv[1];
+if (isDirectlyEvalByNode) {
+	main();
+}

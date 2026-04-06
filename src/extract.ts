@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { resolve } from "path";
 import ExcelJS, { ValueType } from "exceljs";
 import { TransData } from "./types";
+import { fileURLToPath } from "url";
 
 const scriptPath = "out/scripts";
 const scriptPhonePath = "out/phone/scripts";
@@ -204,4 +205,8 @@ export async function _main(scriptPath: string, scriptPhonePath: string, transEx
 	await writeExcel(result, outExcelPath);
 }
 
-main();
+const moduleFilePath = fileURLToPath(import.meta.url);
+const isDirectlyEvalByNode = moduleFilePath === process.argv[1];
+if (isDirectlyEvalByNode) {
+	main();
+}
