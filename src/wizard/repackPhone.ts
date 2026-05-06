@@ -66,7 +66,7 @@ export async function main(options: RuntimeOptions) {
 		}
 		await setSwfPhonePath(options);
 	}
-	if ((options.fast >= FastLevel.all) || validFontPhoneDir(options.fontPCDir)) {
+	if ((options.fast >= FastLevel.all) || validFontPhoneDir(options.fontPhoneDir)) {
 		await setFontPhoneDir(options);
 	}
 	if ((options.fast >= FastLevel.all) || validResourceDir(options.resourceDir)) {
