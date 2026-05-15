@@ -117,6 +117,13 @@ export const replaceList1: ReplaceInfo[] = [
 		{oper: "replace", line: "{fontSizeLine1}", str: [`pushbyte 18`]},
 		{oper: "find", out: "fontSizeLine2", cond: {type: "comm", comm: "pushbyte", param: `12`, idx: 1}, result: 0},
 		{oper: "replace", line: "{fontSizeLine2}", str: [`pushbyte 16`]},
+
+		{oper: "find", out: "fontOpacityLine1", cond: {type: "comm", comm: "pushdouble", param: `0.5`, idx: 1}, result: 0},
+		{oper: "replace", line: "{fontOpacityLine1}", str: [`pushdouble 1.0`]},
+		{oper: "find", out: "fontOpacityLine2", cond: {type: "comm", comm: "pushdouble", param: `0.5`, idx: 1}, result: 0},
+		{oper: "replace", line: "{fontOpacityLine2}", str: [`pushdouble 1.0`]},
+		{oper: "find", out: "fontOpacityLine3", cond: {type: "comm", comm: "pushdouble", param: `0.5`, idx: 1}, result: 0},
+		{oper: "replace", line: "{fontOpacityLine3}", str: [`pushdouble 1.0`]},
 	]}},
 	//高级选项框高度
 	{env: "phone", search: {str: `"Scientific Notation"`, addi: [], type: "method"}, result: [], pcode: {name: "advOptions.pcode", modify: [
